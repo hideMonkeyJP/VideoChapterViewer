@@ -3,25 +3,28 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Supabase Configuration:', {
+  url: supabaseUrl ? 'exists' : 'missing',
+  key: supabaseKey ? 'exists' : 'missing'
+});
+
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing environment variables:', {
-    url: !!supabaseUrl,
-    key: !!supabaseKey
-  });
-  throw new Error('Required environment variables VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not set');
+  throw new Error('Required Supabase environment variables are missing. Please check your .env file.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Debug function to check connection
 export async function checkSupabaseConnection() {
   try {
     const { data, error } = await supabase.from('videos').select('count');
-    if (error) throw error;
-    console.log('Supabase connection successful', { count: data });
+    if (error) {
+      console.error('Supabase connection error:', error);
+      throw error;
+    }
+    console.log('Supabase connection successful:', data);
     return true;
   } catch (error) {
-    console.error('Supabase connection failed:', error);
+    console.error('Failed to connect to Supabase:', error);
     return false;
   }
 }
