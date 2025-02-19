@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Video } from '../lib/supabase';
-import { supabase } from '../lib/supabase';
-import { Video as VideoIcon, Loader } from 'lucide-react';
+import { Video, supabase, checkSupabaseConnection } from '../lib/supabase';
+import { Video as VideoIcon, Loader, AlertCircle } from 'lucide-react';
 
 export default function VideoList() {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -12,15 +11,28 @@ export default function VideoList() {
   useEffect(() => {
     async function fetchVideos() {
       try {
+        // First check the connection
+        const isConnected = await checkSupabaseConnection();
+        if (!isConnected) {
+          throw new Error('Could not connect to Supabase');
+        }
+
         const { data, error } = await supabase
           .from('videos')
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+        
+        console.log('Fetched videos:', data);
         setVideos(data || []);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch videos');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch videos';
+        console.error('Error in fetchVideos:', errorMessage);
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -39,10 +51,12 @@ export default function VideoList() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
         <div className="text-red-500 text-center">
-          <p className="text-xl font-semibold">Error</p>
-          <p>{error}</p>
+          <p className="text-xl font-semibold mb-2">Error</p>
+          <p className="text-sm">{error}</p>
+          <p className="text-sm mt-4">Please check your Supabase connection and environment variables.</p>
         </div>
       </div>
     );
@@ -71,7 +85,7 @@ export default function VideoList() {
         ))}
         {videos.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            No videos found
+            No videos found in the database
           </div>
         )}
       </div>
