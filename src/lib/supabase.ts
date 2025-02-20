@@ -1,33 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
 
-// @ts-ignore - グローバル変数の型定義
-declare const __SUPABASE_URL__: string;
-// @ts-ignore - グローバル変数の型定義
-declare const __SUPABASE_KEY__: string;
+const getSupabaseConfig = () => {
+  const url = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-const supabaseUrl = __SUPABASE_URL__;
-const supabaseKey = __SUPABASE_KEY__;
+  if (!url || !key) {
+    console.error('Supabase configuration is missing:', {
+      hasUrl: !!url,
+      hasKey: !!key,
+      mode: import.meta.env.MODE
+    });
+  }
 
-// 環境変数のチェックを強化
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Critical: Supabase credentials are missing', {
-    url: {
-      exists: !!supabaseUrl,
-      value: supabaseUrl || 'undefined'
-    },
-    key: {
-      exists: !!supabaseKey,
-      length: supabaseKey?.length || 0
+  return { url, key };
+};
+
+const { url: supabaseUrl, key: supabaseKey } = getSupabaseConfig();
+
+export const supabase = createClient(
+  supabaseUrl || '',
+  supabaseKey || '',
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
     }
-  });
-  throw new Error('Supabase credentials are not properly configured');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+  }
+);
 
 export async function checkSupabaseConnection() {
+  const config = getSupabaseConfig();
+  if (!config.url || !config.key) {
+    console.error('Supabase credentials are not configured');
+    return false;
+  }
+
   try {
-    console.log('Testing Supabase connection...');
+    console.log('Checking Supabase connection...');
     const { data, error } = await supabase.from('videos').select('count');
     
     if (error) {
