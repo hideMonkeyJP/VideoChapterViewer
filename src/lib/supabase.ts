@@ -3,14 +3,34 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-console.log('Supabase Config:', {
-  hasUrl: !!supabaseUrl,
-  hasKey: !!supabaseKey,
-  urlPreview: supabaseUrl ? `${supabaseUrl.slice(0, 20)}...` : 'missing',
-  keyPreview: supabaseKey ? `${supabaseKey.slice(0, 8)}...` : 'missing'
+// 起動時に環境変数の状態を詳しくログ出力
+console.log('Environment Variables Check:', {
+  timestamp: new Date().toISOString(),
+  environment: import.meta.env.MODE,
+  variables: {
+    VITE_SUPABASE_URL: {
+      exists: !!supabaseUrl,
+      type: typeof supabaseUrl,
+      length: supabaseUrl?.length,
+      preview: supabaseUrl ? `${supabaseUrl.slice(0, 10)}...` : 'undefined'
+    },
+    VITE_SUPABASE_ANON_KEY: {
+      exists: !!supabaseKey,
+      type: typeof supabaseKey,
+      length: supabaseKey?.length,
+      preview: supabaseKey ? `${supabaseKey.slice(0, 5)}...` : 'undefined'
+    }
+  }
 });
 
-// 環境変数が存在しない場合でもクライアントを作成
+// 環境変数が不足している場合は明確なエラーメッセージを表示
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Critical: Missing Supabase credentials', {
+    missingUrl: !supabaseUrl,
+    missingKey: !supabaseKey
+  });
+}
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
   supabaseKey || 'placeholder-key'
@@ -18,45 +38,38 @@ export const supabase = createClient(
 
 export async function checkSupabaseConnection() {
   try {
-    console.log('Checking Supabase connection...');
+    console.log('Starting Supabase connection check...');
     
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Cannot check connection: Missing Supabase credentials');
-      return false;
+      throw new Error(
+        '環境変数が設定されていません:\n' +
+        (!supabaseUrl ? '- VITE_SUPABASE_URL が未設定\n' : '') +
+        (!supabaseKey ? '- VITE_SUPABASE_ANON_KEY が未設定\n' : '')
+      );
     }
 
-    // First try a simple health check
-    const { error: healthError } = await supabase.from('videos').select('count');
-    if (healthError) {
-      console.error('Health check failed:', healthError);
-      return false;
-    }
-
-    // Try to fetch actual data
-    const { data, error, status, statusText } = await supabase
-      .from('videos')
-      .select('*')
-      .limit(1);
-    
-    console.log('Connection check details:', {
-      success: !error,
-      status,
-      statusText,
-      error: error?.message,
-      hasData: !!data,
-      dataCount: data?.length
-    });
+    // 接続テスト
+    console.log('Testing database connection...');
+    const { data, error } = await supabase.from('videos').select('count');
     
     if (error) {
-      console.error('Supabase query error:', error);
-      return false;
+      console.error('Database connection failed:', error);
+      throw error;
     }
 
-    console.log('Connection successful, sample data:', data);
+    console.log('Database connection successful:', {
+      timestamp: new Date().toISOString(),
+      result: data
+    });
+
     return true;
   } catch (error) {
-    console.error('Failed to connect to Supabase:', error);
-    return false;
+    const errorMessage = error instanceof Error ? error.message : '不明なエラーが発生しました';
+    console.error('Connection check failed:', {
+      timestamp: new Date().toISOString(),
+      error: errorMessage
+    });
+    throw error;
   }
 }
 

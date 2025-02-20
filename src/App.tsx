@@ -4,10 +4,16 @@ import VideoList from './components/VideoList';
 import VideoDetail from './components/VideoDetail';
 
 function App() {
-  console.log('App rendering, env vars:', {
-    url: import.meta.env.VITE_SUPABASE_URL,
-    key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'exists' : 'missing'
-  });
+  // 起動時に環境変数の状態をチェック
+  React.useEffect(() => {
+    console.log('App mounted, checking environment:', {
+      timestamp: new Date().toISOString(),
+      nodeEnv: process.env.NODE_ENV,
+      viteMode: import.meta.env.MODE,
+      hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
+      hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+    });
+  }, []);
 
   return (
     <Router>
