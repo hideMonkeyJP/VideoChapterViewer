@@ -18,8 +18,19 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    headers: {
+      // CSPの設定を追加
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: https: http:",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+      ].join('; ')
+    }
+  },
   define: {
-    // This ensures environment variables are properly handled during build
     'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
     'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
   },
