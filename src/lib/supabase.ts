@@ -1,54 +1,43 @@
 import { createClient } from '@supabase/supabase-js';
 
-const getSupabaseConfig = () => {
-  const url = import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
-    console.error('Supabase configuration is missing:', {
-      hasUrl: !!url,
-      hasKey: !!key,
-      mode: import.meta.env.MODE
-    });
-  }
-
-  return { url, key };
-};
-
-const { url: supabaseUrl, key: supabaseKey } = getSupabaseConfig();
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase環境変数が設定されていません');
+}
 
 export const supabase = createClient(
   supabaseUrl || '',
-  supabaseKey || '',
+  supabaseAnonKey || '',
   {
     auth: {
-      persistSession: true,
       autoRefreshToken: true,
+      persistSession: true,
       detectSessionInUrl: true
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'video-chapter-viewer'
+      }
     }
   }
 );
 
 export async function checkSupabaseConnection() {
-  const config = getSupabaseConfig();
-  if (!config.url || !config.key) {
-    console.error('Supabase credentials are not configured');
+  if (!supabaseUrl || !supabaseAnonKey) {
     return false;
   }
 
   try {
-    console.log('Checking Supabase connection...');
     const { data, error } = await supabase.from('videos').select('count');
-    
     if (error) {
-      console.error('Supabase connection error:', error);
+      console.error('Supabase接続エラー:', error);
       return false;
     }
-    
-    console.log('Supabase connection successful:', data);
     return true;
   } catch (error) {
-    console.error('Failed to connect to Supabase:', error);
+    console.error('Supabase接続チェック中にエラーが発生:', error);
     return false;
   }
 }
