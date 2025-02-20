@@ -8,6 +8,7 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
+    minify: true,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -16,5 +17,10 @@ export default defineConfig({
         },
       },
     },
+  },
+  define: {
+    // This ensures environment variables are properly handled during build
+    'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+    'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
   },
 });
