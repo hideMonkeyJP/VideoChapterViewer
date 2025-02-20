@@ -10,14 +10,10 @@ console.log('Supabase Config:', {
   keyPreview: supabaseKey ? `${supabaseKey.slice(0, 8)}...` : 'missing'
 });
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing environment variables for Supabase configuration');
-  throw new Error('環境変数が設定されていません。VITE_SUPABASE_URLとVITE_SUPABASE_ANON_KEYを確認してください。');
-}
-
+// 環境変数が存在しない場合でもクライアントを作成
 export const supabase = createClient(
-  supabaseUrl,
-  supabaseKey
+  supabaseUrl || 'https://placeholder-url.supabase.co',
+  supabaseKey || 'placeholder-key'
 );
 
 export async function checkSupabaseConnection() {

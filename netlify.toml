@@ -9,3 +9,8 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# 環境変数のプレースホルダーを設定
+[context.production.environment]
+  VITE_SUPABASE_URL = ""
+  VITE_SUPABASE_ANON_KEY = ""
