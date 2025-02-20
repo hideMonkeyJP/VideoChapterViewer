@@ -1,46 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://mlidxmirlzzrvdujgtab.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1saWR4bWlybHp6cnZkdWpndGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4OTAzNzQsImV4cCI6MjA1NTQ2NjM3NH0.QIrjD4wJJB72Sk-p8HuVzY7UNXzBvRCzLzS2VVND0c8';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase環境変数が設定されていません');
-}
-
-export const supabase = createClient(
-  supabaseUrl || '',
-  supabaseAnonKey || '',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true
-    },
-    global: {
-      headers: {
-        'X-Client-Info': 'video-chapter-viewer'
-      }
-    }
-  }
-);
-
-export async function checkSupabaseConnection() {
-  if (!supabaseUrl || !supabaseAnonKey) {
-    return false;
-  }
-
-  try {
-    const { data, error } = await supabase.from('videos').select('count');
-    if (error) {
-      console.error('Supabase接続エラー:', error);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('Supabase接続チェック中にエラーが発生:', error);
-    return false;
-  }
-}
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export type Video = {
   id: string;
